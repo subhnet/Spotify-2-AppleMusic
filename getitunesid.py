@@ -1,6 +1,7 @@
 import csv
 import urllib.parse, urllib.request
 import json
+from time import sleep
 
 def get_itunes_id(title, artist, album):
     base_url = "https://itunes.apple.com/search?country=FR&media=music&entity=song&limit=5&term="
@@ -83,13 +84,14 @@ with open('spotify.csv', encoding='utf-8') as f_raw:
         track_id = get_itunes_id(title, artist, album)
         if track_id:
             am_id.append(track_id)
-            print(f'{title} - {artist} - {album} => {track_id}')
+            print(f'{title} | {artist} | {album} => {track_id}')
         else:
-            print(f'{title} - {artist} - {album} => NOT FOUND')
+            print(f'{title} | {artist} | {album} => NOT FOUND')
             with open('noresult.txt', 'a+') as f:
-                f.write(f'{title} - {artist} - {album} => NOT FOUND')
+                f.write(f'{title} | {artist} | {album} => NOT FOUND')
                 f.write('\n')
-
+        sleep(1)
+        
 with open('itunes.csv', 'w', encoding='utf-8') as output_file:
     for each_id in am_id:
         output_file.write(str(each_id) + "\n")
