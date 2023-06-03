@@ -16,6 +16,8 @@ python3 getitunesid.py
 It will use the **spotify.csv** file to create a new file **itunes.csv** with each line consisting of the Apple Music identifier of a song in your Spotify playlist.
 And now, all songs that haven't match any Apple Music identifiers are added to a **noresult.txt** file.
 
+Please note that the current script is configured on the iTunes StoreFront of **France**. If needed, don't forget to change your ISO Code inside the base URL with the one associated to your country. Full list of ISO Code by country [here](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
+
 ### 3. Open Apple Music in Firefox
 * To add our songs to the playlist we want, you'll need to open [Apple Music](https://music.apple.com/login) into [Firefox](https://www.mozilla.org/firefox/new/) (I use Firefox but you can try to do the same on other browser. But it works for me using Firefox. You'll maybe have to adapt the following steps).
 * When you're logged in open the **Dev Tools** (**Ctrl + Shift + I** or **F12** on Windows and Linux or **Cmd + Opt + I** on macOS). 
