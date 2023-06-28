@@ -1,7 +1,14 @@
+from sys import argv, exit
 import csv
 import urllib.parse, urllib.request
 import json
 from time import sleep
+
+if len(argv) > 1 and argv[1]:
+    pass
+else:
+    print('\nCommand usage:\npython3 getitunesid.py yourplaylist.csv\nMore info at https://github.com/therealmarius/Spotify-2-AppleMusic')
+    exit()
 
 def get_itunes_id(title, artist, album):
     base_url = "https://itunes.apple.com/search?country=FR&media=music&entity=song&limit=5&term="
@@ -75,26 +82,38 @@ def get_itunes_id(title, artist, album):
         return None
     
 am_id = []
+playlist_name = str(argv[1]).split('.')
+playlist_name = playlist_name[0]
 
-with open('spotify.csv', encoding='utf-8') as f_raw:
+with open(str(argv[1]), encoding='utf-8') as f_raw:
     f = csv.reader(f_raw)
     next(f)
+    n = 0
+    converted = 0
+    failed = 0
     for row in f:
+        n += 1
         title, artist, album =  row[1], row[3], row[5]
         track_id = get_itunes_id(title, artist, album)
         if track_id:
             am_id.append(track_id)
-            print(f'{title} | {artist} | {album} => {track_id}')
+            print(f'N°{n} | {title} | {artist} | {album} => {track_id}')
+            converted += 1
         else:
-            print(f'{title} | {artist} | {album} => NOT FOUND')
-            with open('noresult.txt', 'a+') as f:
+            print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND')
+            with open(f'{playlist_name}_noresult.txt', 'w') as f:
                 f.write(f'{title} | {artist} | {album} => NOT FOUND')
                 f.write('\n')
-        sleep(1)
-        
-with open('itunes.csv', 'w', encoding='utf-8') as output_file:
+            failed += 1
+        sleep(1.5)
+
+new_filename = playlist_name + '_itunes-version.csv'
+
+with open(new_filename, 'w', encoding='utf-8') as output_file:
     for each_id in am_id:
         output_file.write(str(each_id) + "\n")
+
+print(f'\n - STAT REPORT -\nPlaylist Songs: {n}\nConverted Songs: {converted}\nFailed Songs: {failed}\nPlaylist converted at {round(converted/n*100)}%')
         
 # Developped by @therealmarius on GitHub
 # Based on the work of @simonschellaert on GitHub
