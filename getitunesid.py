@@ -101,7 +101,7 @@ with open(str(argv[1]), encoding='utf-8') as f_raw:
             converted += 1
         else:
             print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND')
-            with open(f'{playlist_name}_noresult.txt', 'w') as f:
+            with open(f'{playlist_name}_noresult.txt', 'w+') as f:
                 f.write(f'{title} | {artist} | {album} => NOT FOUND')
                 f.write('\n')
             failed += 1
