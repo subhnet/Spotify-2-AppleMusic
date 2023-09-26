@@ -109,7 +109,7 @@ with open(str(argv[1]), encoding='utf-8') as f_raw:
 
 new_filename = playlist_name + '_itunes-version.csv'
 
-with open(new_filename, 'w', encoding='utf-8') as output_file:
+with open(new_filename, 'w+', encoding='utf-8') as output_file:
     for each_id in am_id:
         output_file.write(str(each_id) + "\n")
 
