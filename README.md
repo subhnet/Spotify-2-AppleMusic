@@ -36,7 +36,7 @@ Here's a step by step to get all of this data:
 python3 addsongs.py yourplaylist_itunes-version.csv
 ```
 (Same as before, replace *yourplaylist_itunes-version.csv* by your own filename)
-Follow the script prompt, and when asked, paste in each data.
+Follow the script prompt, and when asked, paste in each data. If your terminal have a paste character limit: please hardcode them.
 ## Limitations
 ### Missing songs
 The script to retrieve the Apple Music identifier for a Spotify song is quite basic. It simply compares the title, artist, and album name in many different combinations of search terms. The goal is to match an Apple Music song with your Spotify song and then get their iTunes identifier (it's the same as Apple Music identifiers). Some songs don't have the exact same title, artist, or album name (extraneous spacing, for example) in both services. This results in the script failing to retrieve an identifier for some songs. Hopefully, you'll be able to add the missing songs manually thanks to the **noresult.txt** file.
