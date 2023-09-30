@@ -13,23 +13,24 @@ else:
 def get_itunes_id(title, artist, album):
     base_url = "https://itunes.apple.com/search?country=FR&media=music&entity=song&limit=5&term="
     try:
+        # Search for the title + artist + album
         url = base_url + urllib.parse.quote(title + " " + artist + " " + album)
         request = urllib.request.Request(url)
         response = urllib.request.urlopen(request)
         data = json.loads(response.read().decode('utf-8'))
-        
+        # If no result, search for the title + artist
         if data['resultCount'] == 0:
             url = base_url + urllib.parse.quote(title + " " + artist)
             request = urllib.request.Request(url)
             response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode('utf-8'))
-            
+            # If no result, search for the title + album
             if data['resultCount'] == 0:
                 url = base_url + urllib.parse.quote(title + " " + album)
                 request = urllib.request.Request(url)
                 response = urllib.request.urlopen(request)
                 data = json.loads(response.read().decode('utf-8'))
-                
+                # If no result, search for the title
                 if data['resultCount'] == 0:
                     url = base_url + urllib.parse.quote(title)
                     request = urllib.request.Request(url)
@@ -45,38 +46,31 @@ def get_itunes_id(title, artist, album):
         for each in data['results']:
             #Trying to match with the exact track name, the artist name and the album name
             if each['trackName'].lower() == title.lower() and each['artistName'].lower() == artist.lower() and each['collectionName'].lower() == album.lower():
-                return each['trackId']
-        
-        for each in data['results']:            
+                return each['trackId']           
             #Trying to match with the exact track name and the artist name
-            if each['trackName'].lower() == title.lower() and each['artistName'].lower() == artist.lower():
+            elif each['trackName'].lower() == title.lower() and each['artistName'].lower() == artist.lower():
                 return each['trackId']
-            
-        for each in data['results']:
             #Trying to match with the exact track name and the album name
-            if each['trackName'].lower() == title.lower() and each['collectionName'].lower() == album.lower():
+            elif each['trackName'].lower() == title.lower() and each['collectionName'].lower() == album.lower():
                 return each['trackId']
-            
-        for each in data['results']:
             #Trying to match with the exact track name and the artist name, in the case artist name are different between Spotify and Apple Music
-            if each['trackName'].lower() == title.lower() and (each["artistName"].lower() in artist.lower() or artist.lower() in each["artistName"].lower()):
+            elif each['trackName'].lower() == title.lower() and (each["artistName"].lower() in artist.lower() or artist.lower() in each["artistName"].lower()):
                 return each['trackId']
-            
-        for each in data['results']:
             #Trying to match with the exact track name and the album name, in the case album name are different between Spotify and Apple Music
-            if each['trackName'].lower() == title.lower() and (each["collectionName"].lower() in album.lower() or album.lower() in each["collectionName"].lower()):
+            elif each['trackName'].lower() == title.lower() and (each["collectionName"].lower() in album.lower() or album.lower() in each["collectionName"].lower()):
                 return each['trackId']  
-            
-        for each in data['results']:
             #Trying to match with the exact track name
-            if each['trackName'].lower() == title.lower():
-                return each['trackId']
-            
-        for each in data['results']:
+            elif each['trackName'].lower() == title.lower():
+                return each['trackId']        
             #Trying to match with the track name, in the case track name are different between Spotify and Apple Music
-            if title.lower() in each['trackName'] or each['trackName'].lower() in title.lower():
+            elif title.lower() in each['trackName'] or each['trackName'].lower() in title.lower():
                 return each['trackId']
-            
+        try:
+            #If no result, return the first result
+            return data['results'][0]['trackId']
+        except:
+            #If no result, return None
+            return None
     except:
         #The error is handled later in the code
         return None
@@ -101,7 +95,7 @@ with open(str(argv[1]), encoding='utf-8') as f_raw:
             converted += 1
         else:
             print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND')
-            with open(f'{playlist_name}_noresult.txt', 'w+') as f:
+            with open(f'{playlist_name}_noresult.txt', 'a+') as f:
                 f.write(f'{title} | {artist} | {album} => NOT FOUND')
                 f.write('\n')
             failed += 1
