@@ -35,7 +35,7 @@ with requests.Session() as s:
             exit(1)
         try:
             request = s.post(f"https://amp-api.music.apple.com/v1/me/library/playlists/{playlist_id}/tracks", json={"data":[{"id":f"{song_id}","type":"songs"}]})
-            if requests.codes.ok: print(f"Song {song_id} added to playlist {playlist_id} with staus code: {request.status_code}!")
+            if requests.codes.ok: print(f"Song {song_id} added to playlist {playlist_id}!")
             else: 
                 print(f"Error {request.status_code} while adding song {song_id} to playlist {playlist_id}!")
                 n -= 1
