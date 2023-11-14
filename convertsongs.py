@@ -19,6 +19,11 @@ media_user_token = input("\nPlease enter your media user token:\n")
 cookies = input("\nPlease enter your cookies:\n")
 playlist_identifier = input("\nPlease enter the playlist identifier:\n")
 
+
+# function to escape apostrophes
+def escape_apostrophes(s):
+    return s.replace("'", "\\'")
+
 # Function to get the iTunes ID of a song
 def get_itunes_id(title, artist, album):
     BASE_URL = "https://itunes.apple.com/search?country=FR&media=music&entity=song&limit=5&term="
@@ -136,7 +141,8 @@ with requests.Session() as s:
         for row in file:
             n += 1
             # Trying to get the iTunes ID of the song
-            title, artist, album =  row[1], row[3], row[5]
+            title, artist, album = escape_apostrophes(
+                row[2]), escape_apostrophes(row[4]), escape_apostrophes(row[3])
             track_id = get_itunes_id(title, artist, album)
             # If the song is found, add it to the playlist
             if track_id:
