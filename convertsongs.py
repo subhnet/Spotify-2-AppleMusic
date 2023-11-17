@@ -13,12 +13,20 @@ else:
     print('\nCommand usage:\npython3 convertsongs.py yourplaylist.csv\nMore info at https://github.com/therealmarius/Spotify-2-AppleMusic')
     exit()
 
-# Getting user's data for the connection
-token = input("\nPlease enter your Apple Music Authorization (Bearer token):\n")
-media_user_token = input("\nPlease enter your media user token:\n")
-cookies = input("\nPlease enter your cookies:\n")
-playlist_identifier = input("\nPlease enter the playlist identifier:\n")
+# Function to get contents of file if it exists
+def get_connection_data(f,prompt):
+    if os.path.exists(f):
+        with open(f,'r') as file:
+            return file.read().rstrip('\n')
+    else:
+            return input(prompt)
 
+# Getting user's data for the connection
+token = get_connection_data("token.dat", "\nPlease enter your Apple Music Authorization (Bearer token):\n")
+media_user_token = get_connection_data("media_user_token.dat", "\nPlease enter your media user token:\n")
+cookies = get_connection_data("cookies.dat", "\nPlease enter your cookies:\n")
+
+playlist_identifier = input("\nPlease enter the playlist identifier:\n")
 
 # function to escape apostrophes
 def escape_apostrophes(s):
