@@ -28,7 +28,7 @@ Here's a step by step to get all of this data:
 python3 convertsongs.py yourplaylist.csv
 ```
 (Replace *yourplaylist.csv* by your own filename, the one you got from [Exportify](https://watsonbox.github.io/exportify/)).
-Follow the script prompt, and when asked, paste in each data. If your terminal have a paste character limit: please hardcode them.
+Follow the script prompt, and when asked, paste in each data. If your terminal have a paste character limit: please hardcode them OR put them into separate files named as following: `token.dat`, `media_user_token.dat` and `cookies.dat`.
 
 ## Limitations & Notes
 ### iTunes StoreFront Region
