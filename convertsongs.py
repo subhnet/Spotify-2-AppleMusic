@@ -163,7 +163,7 @@ with requests.Session() as s:
             # If not, write it in a file
             else:
                 print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND')
-                with open(f'{playlist_name}_noresult.txt', 'a+') as f:
+                with open(f'{playlist_name}_noresult.txt', 'a+', encoding='utf-8') as f:
                     f.write(f'{title} | {artist} | {album} => NOT FOUND')
                     f.write('\n')
                 failed += 1
