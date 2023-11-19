@@ -13,11 +13,24 @@ else:
     print('\nCommand usage:\npython3 convertsongs.py yourplaylist.csv\nMore info at https://github.com/therealmarius/Spotify-2-AppleMusic')
     exit()
 
+# Function to get contents of file if it exists
+def get_connection_data(f,prompt):
+    if os.path.exists(f):
+        with open(f,'r') as file:
+            return file.read().rstrip('\n')
+    else:
+            return input(prompt)
+
 # Getting user's data for the connection
-token = input("\nPlease enter your Apple Music Authorization (Bearer token):\n")
-media_user_token = input("\nPlease enter your media user token:\n")
-cookies = input("\nPlease enter your cookies:\n")
+token = get_connection_data("token.dat", "\nPlease enter your Apple Music Authorization (Bearer token):\n")
+media_user_token = get_connection_data("media_user_token.dat", "\nPlease enter your media user token:\n")
+cookies = get_connection_data("cookies.dat", "\nPlease enter your cookies:\n")
+
 playlist_identifier = input("\nPlease enter the playlist identifier:\n")
+
+# function to escape apostrophes
+def escape_apostrophes(s):
+    return s.replace("'", "\\'")
 
 # Function to get the iTunes ID of a song
 def get_itunes_id(title, artist, album):
@@ -136,7 +149,8 @@ with requests.Session() as s:
         for row in file:
             n += 1
             # Trying to get the iTunes ID of the song
-            title, artist, album =  row[1], row[3], row[5]
+            title, artist, album = escape_apostrophes(
+                row[1]), escape_apostrophes(row[3]), escape_apostrophes(row[5])
             track_id = get_itunes_id(title, artist, album)
             # If the song is found, add it to the playlist
             if track_id:
@@ -149,7 +163,7 @@ with requests.Session() as s:
             # If not, write it in a file
             else:
                 print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND')
-                with open(f'{playlist_name}_noresult.txt', 'a+') as f:
+                with open(f'{playlist_name}_noresult.txt', 'a+', encoding='utf-8') as f:
                     f.write(f'{title} | {artist} | {album} => NOT FOUND')
                     f.write('\n')
                 failed += 1
