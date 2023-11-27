@@ -13,7 +13,6 @@ To upload your converted IDs to an Apple Music playlist, you'll need 5 things:
 - Your Apple Music Authorization (Bearer Token)
 - Your Apple Music Medi-User-Token
 - Your session cookies
-- Your Apple Music Playlist identifier (the one where you want to push the songs)
 
 Here's a step by step to get all of this data:
 1. To get the list of Apple Music identifiers, all you got to do is get the file you downloaded from [Exportify](https://watsonbox.github.io/exportify/).
@@ -22,10 +21,13 @@ Here's a step by step to get all of this data:
 4. Then you'll need to log in to your account. If you're already logged in, please log out and log in again. 
 5. Go back to the DevTools and look for a GET request to *https://buy.music.apple.com/account/web/info* (It seems like there are 2 requests to this URL; it should be the second one).
 6. In the **Requests Headers**, copy the **Authorization**, the **Media-User-Token** and the **Cookies**.
-7. Using the [Apple Music web player](https://music.apple.com), open the playlist where you want to push all the converted songs. Now look in the URL, and look for the playlist ID. It should be here: *https://music.apple.com/library/playlist/{Playlist unique ID}*  It should look something like this: *p.06aWWNPc05XQaPd*
-8. Now you're finally ready to connvert your songs and push them onto your Apple Music playlist. To do so, open a terminal and run the following:
+7. Now you're finally ready to connvert your songs and push them onto your Apple Music playlist. To do so, open a terminal and run the following:
 ```bash
 python3 convertsongs.py yourplaylist.csv
+```
+or
+```bash
+python3 convertsongs.py playlistdir 
 ```
 (Replace *yourplaylist.csv* by your own filename, the one you got from [Exportify](https://watsonbox.github.io/exportify/)).
 Follow the script prompt, and when asked, paste in each data. If your terminal have a paste character limit: please hardcode them OR put them into separate files named as following: `token.dat`, `media_user_token.dat` and `cookies.dat`.
