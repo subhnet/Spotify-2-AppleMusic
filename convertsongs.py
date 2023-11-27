@@ -175,6 +175,7 @@ def create_playlist_and_add_song(file):
     playlist_name = os.path.basename(file)
     playlist_name = playlist_name.split('.')
     playlist_name = playlist_name[0]
+    playlist_name = playlist_name.replace('_', ' ')
 
     playlist_identifier = create_apple_music_playlist(s, playlist_name)
 
