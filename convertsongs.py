@@ -218,7 +218,8 @@ def create_playlist_and_add_song(file):
                 failed += 1
             sleep(1.5)
     # Printing the stats report
-    print(f'\n - STAT REPORT -\nPlaylist Songs: {n}\nConverted Songs: {converted}\nFailed Songs: {failed}\nPlaylist converted at {round(converted/n*100)}%')
+    converted_percentage = round(converted / n * 100) if n > 0 else 100
+    print(f'\n - STAT REPORT -\nPlaylist Songs: {n}\nConverted Songs: {converted}\nFailed Songs: {failed}\nPlaylist converted at {converted_percentage}%')
 
 
 if __name__ == "__main__":
