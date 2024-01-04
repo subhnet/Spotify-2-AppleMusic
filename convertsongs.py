@@ -159,7 +159,7 @@ def create_playlist_and_add_song(file):
     with requests.Session() as s:
         s.headers.update({"Authorization": f"{token}",
                     "media-user-token": f"{media_user_token}",
-                    "Cookie": f"{cookies}",
+                    "Cookie": f"{cookies}".encode('utf-8'),
                     "Host": "amp-api.music.apple.com",
                     "Accept-Encoding":"gzip, deflate, br",
                     "Referer": "https://music.apple.com/",
