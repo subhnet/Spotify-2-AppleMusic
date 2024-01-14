@@ -1,4 +1,4 @@
-![Spotify2AppleMusicBanner](https://github.com/therealmarius/Spotify-2-AppleMusic/assets/70507259/5c420eb2-a187-4345-8cec-e8b06854786e)
+![Spotify2AppleMusicBannerV2](https://github.com/therealmarius/Spotify-2-AppleMusic/assets/70507259/67dff9c5-49a6-494d-9594-92b2663540ef)
 # Spotify to Apple Music
 ## Based on the work of [@simonschellaert](https://github.com/simonschellaert/spotify2am)
 Import your Spotify playlist to Apple Music **for free** using Python!
