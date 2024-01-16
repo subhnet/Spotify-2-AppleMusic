@@ -30,7 +30,8 @@ or
 ```bash
 python3 convertsongs.py playlistdir 
 ```
-(Replace *yourplaylist.csv* by your own filename, the one you got from [Exportify](https://watsonbox.github.io/exportify/)).
+(Replace *yourplaylist.csv* by your own filename, the one you got from [Exportify](https://watsonbox.github.io/exportify/), or *playlistdir* by your own playlist directory name.)
+
 Follow the script prompt, and when asked, paste in each data. If your terminal have a paste character limit: please hardcode them OR put them into separate files named as following: `token.dat`, `media_user_token.dat` and `cookies.dat`.
 
 ## Limitations & Notes
