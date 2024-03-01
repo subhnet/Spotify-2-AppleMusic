@@ -48,6 +48,7 @@ def create_apple_music_playlist(session, playlist_name):
 token = get_connection_data("token.dat", "\nPlease enter your Apple Music Authorization (Bearer token):\n")
 media_user_token = get_connection_data("media_user_token.dat", "\nPlease enter your media user token:\n")
 cookies = get_connection_data("cookies.dat", "\nPlease enter your cookies:\n")
+country_code = input("Enter the country code (e.g., FR, PL, US etc.): ")
 
 # playlist_identifier = input("\nPlease enter the playlist identifier:\n")
 
@@ -57,7 +58,7 @@ def escape_apostrophes(s):
 
 # Function to get the iTunes ID of a song
 def get_itunes_id(title, artist, album):
-    BASE_URL = "https://itunes.apple.com/search?country=FR&media=music&entity=song&limit=5&term="
+    BASE_URL = f"https://itunes.apple.com/search?country={country_code}&media=music&entity=song&limit=5&term="
     # Search the iTunes catalog for a song
     try:
         # Search for the title + artist + album
