@@ -36,7 +36,7 @@ Follow the script prompt, and when asked, paste in each data. If your terminal h
 
 ## Limitations & Notes
 ### iTunes StoreFront Region
-Please note that the current script is configured on the iTunes StoreFront of **France**. So if you're from a different region, please don't forget to replace your ISO Code inside the base URL (line 37) with the one associated with your region. Full list of ISO Code, provided by Wikipedia, [here](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
+Please note that the current script nneds to be configured with the iTunes StoreFront of **your Region**. Full list of ISO Code, provided by Wikipedia, [here](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
 ### Missing songs
 The script to retrieve the Apple Music identifier for a Spotify song is quite basic. It simply compares the title, artist, and album name in many different combinations of search terms. The goal is to match an Apple Music song with your Spotify song and then get their iTunes identifier (it's the same as Apple Music identifiers). Some songs don't have the exact same title, artist, or album name (extraneous spacing, for example) in both services. This results in the script failing to retrieve an identifier for some songs. Hopefully, you'll be able to add the missing songs manually thanks to the **noresult.txt** file.
 ### Coming from version 1.1 or older ?
