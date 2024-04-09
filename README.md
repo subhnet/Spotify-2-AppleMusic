@@ -21,7 +21,7 @@ Here's a step by step to get all of this data:
 3. Open DevTools (**Ctrl + Shift + I or Cmd + Opt + I**) and go to the Network tab. 
 4. Then you'll need to log in to your account. If you're already logged in, please log out and log in again. 
 5. Go back to the DevTools and look for a GET request to *https://buy.music.apple.com/account/web/info* (It seems like there are 2 requests to this URL; it should be the second one).
-6. In the **Requests Headers**, copy the **Authorization**, the **Media-User-Token** and the **Cookies**.
+6. In the **Requests Headers**, copy the **Authorization** (Please make sure to copy the `Bearer` part), the **Media-User-Token** and the **Cookies**.
 7. Now you're finally ready to connvert your songs and push them onto your Apple Music playlist. To do so, open a terminal and run the following:
 ```bash
 python3 convertsongs.py yourplaylist.csv
