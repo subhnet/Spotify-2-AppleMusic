@@ -185,7 +185,10 @@ def create_playlist_and_add_song(file):
     # Opening the inputed CSV file
     with open(str(file), encoding='utf-8') as file:
         file = csv.reader(file)
-        next(file)
+        header_row = next(file)
+        if header_row[1] != 'Track Name' or header_row[3] != 'Artist Name(s)' or header_row[5] != 'Album Name':
+            print('\nThe CSV file is not in the correct format!\nPlease be sure to download the CSV file(s) only from https://watsonbox.github.io/exportify/.\n\n')
+            return
         # Initializing variables for the stats
         n = 0
         converted = 0
