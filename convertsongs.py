@@ -64,7 +64,19 @@ def get_itunes_id(title, artist, album):
         # Search for the title + artist + album
         url = BASE_URL + urllib.parse.quote(title + " " + artist + " " + album)
         request = urllib.request.Request(url)
-        response = urllib.request.urlopen(request)
+        try:
+            response = urllib.request.urlopen(request)
+        except Exception as e1:
+            print(e1)
+            if ("SSL: CERTIFICATE_VERIFY_FAILED" in e1):
+                print("""
+                This issue is likey because of missing certification for macOS.
+                Here are the steps to solution:
+                1. Open the folder /Applications/Python 3.x (x is the version you are running).
+                2. Double click the Install Certificates.command. It will open a terminal and install the certificate.
+                3. Rerun this script.
+                """)                
+                exit(1)
         data = json.loads(response.read().decode('utf-8'))
         # If no result, search for the title + artist
         if data['resultCount'] == 0:
