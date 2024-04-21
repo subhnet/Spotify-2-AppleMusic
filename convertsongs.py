@@ -6,6 +6,9 @@ from time import sleep
 import requests
 import os
 
+# Delay (in seconds) to wait between tracks (to avoid getting rate limted) - reduce at own risk
+delay = 1
+
 # Checking if the command is correct
 if len(argv) > 1 and argv[1]:
     pass
@@ -26,10 +29,10 @@ def create_apple_music_playlist(session, playlist_name):
     data = {
         'attributes': {
             'name': playlist_name,
-            'description': 'A new playlist created via API'
+            'description': 'A new playlist created via API using Spotify-2-AppleMusic',
         }
     }
-    # test if playlist exists and create it if not
+    # Test if playlist exists and create it if not
     response = session.get(url)
     if response.status_code == 200:
         for playlist in response.json()['data']:
@@ -48,15 +51,13 @@ def create_apple_music_playlist(session, playlist_name):
 token = get_connection_data("token.dat", "\nPlease enter your Apple Music Authorization (Bearer token):\n")
 media_user_token = get_connection_data("media_user_token.dat", "\nPlease enter your media user token:\n")
 cookies = get_connection_data("cookies.dat", "\nPlease enter your cookies:\n")
-country_code = input("Enter the country code (e.g., FR, PL, US etc.): ")
-
-# playlist_identifier = input("\nPlease enter the playlist identifier:\n")
+country_code = input("Enter the country code (e.g., FR, UK, US etc.): ")
 
 # function to escape apostrophes
 def escape_apostrophes(s):
     return s.replace("'", "\\'")
 
-# Function to get the iTunes ID of a song
+# Function to get the iTunes ID of a song (text based search)
 def get_itunes_id(title, artist, album):
     BASE_URL = f"https://itunes.apple.com/search?country={country_code}&media=music&entity=song&limit=5&term="
     # Search the iTunes catalog for a song
@@ -84,8 +85,8 @@ def get_itunes_id(title, artist, album):
                     request = urllib.request.Request(url)
                     response = urllib.request.urlopen(request)
                     data = json.loads(response.read().decode('utf-8'))
-    except:
-        return print("An error occured with the request.")
+    except Exception as e:
+        return print(f"An error occured with the text based search request: {e}")
     
     # Try to match the song with the results
     try:
@@ -124,20 +125,48 @@ def get_itunes_id(title, artist, album):
         #The error is handled later in the code
         return None
 
+def match_isrc_to_itunes_id(session, album, album_artist, isrc):
+    # Search the Apple Music caralog for a song using the ISRC
+    BASE_URL = f"https://amp-api.music.apple.com/v1/catalog/{country_code}/songs?filter[isrc]={isrc}"
+    try:
+        request = session.get(BASE_URL)
+        if request.status_code == 200:
+            data = json.loads(request.content.decode('utf-8'))
+        else:
+            raise Exception(f"Error {request.status_code}\n{request.reason}")
+        if data["data"]:
+            pass
+        else:
+            return None
+    except Exception as e:
+        return print(f"An error occured with the ISRC based search request: {e}")
+    
+    # Try to match the song with the results
+    try:
+        for each in data['data']:
+            if each['attributes']['albumName'].lower() == album.lower() and each['attributes']['artistName'].lower() == album_artist.lower():
+                return each['id']
+            elif each['attributes']['albumName'].lower() == album.lower() and (each['attributes']['artistName'].lower() in album_artist.lower() or album_artist.lower() in each['attributes']['artistName'].lower()):
+                return each['id']
+            elif each['attributes']['albumName'].lower() == album.lower():
+                return each['id']
+    except:
+        return None
+
 # Function to add a song to a playlist
-def add_song_to_playlist(session, song_id, playlist_id, playlist_name):
+def add_song_to_playlist(session, song_id, playlist_id):
     try:   
         request = session.post(f"https://amp-api.music.apple.com/v1/me/library/playlists/{playlist_id}/tracks", json={"data":[{"id":f"{song_id}","type":"songs"}]})
         # Checking if the request is successful
         if requests.codes.ok:
-            print(f"Song {song_id} added to playlist {playlist_name}!")
+            print(f"Song {song_id} added successfully!")
             return True
         # If not, print the error code
         else: 
-            print(f"Error {request.status_code} while adding song {song_id} to playlist {playlist_name}!")
+            print(f"Error {request.status_code} while adding song {song_id}: {request.reason}")
             return False
     except:
-        print(f"HOST ERROR: Apple Music might have blocked the connection during the add of {song_id} to playlist {playlist_name}!\nPlease wait a few minutes and try again.\nIf the problem persists, please contact the developer.")
+        print(f"HOST ERROR: Apple Music might have blocked the connection during the add of {song_id}!\nPlease wait a few minutes and try again.\nIf the problem persists, please contact the developer.")
         return False
 
 def get_playlist_track_ids(session, playlist_id):
@@ -158,48 +187,61 @@ def get_playlist_track_ids(session, playlist_id):
 # Opening session
 def create_playlist_and_add_song(file):
     with requests.Session() as s:
-        s.headers.update({"Authorization": f"{token}",
+        s.headers.update({
+                    "Authorization": f"{token}",
                     "media-user-token": f"{media_user_token}",
                     "Cookie": f"{cookies}".encode('utf-8'),
                     "Host": "amp-api.music.apple.com",
                     "Accept-Encoding":"gzip, deflate, br",
                     "Referer": "https://music.apple.com/",
                     "Origin": "https://music.apple.com",
-                    "Content-Length": "45",
+                    #"Content-Length": "45",
                     "Connection": "keep-alive",
                     "Sec-Fetch-Dest": "empty",
                     "Sec-Fetch-Mode": "cors",
                     "Sec-Fetch-Site": "same-site",
-                    "TE": "trailers"})
+                    #"TE": "trailers"
+                    })
     
     # Getting the playlist name
     playlist_name = os.path.basename(file)
     playlist_name = playlist_name.split('.')
     playlist_name = playlist_name[0]
     playlist_name = playlist_name.replace('_', ' ')
+    playlist_name = playlist_name.capitalize()
 
     playlist_identifier = create_apple_music_playlist(s, playlist_name)
 
     playlist_track_ids = get_playlist_track_ids(s, playlist_identifier)
-    print(playlist_track_ids)
+    #print(playlist_track_ids)
+    
     # Opening the inputed CSV file
     with open(str(file), encoding='utf-8') as file:
         file = csv.reader(file)
         header_row = next(file)
-        if header_row[1] != 'Track Name' or header_row[3] != 'Artist Name(s)' or header_row[5] != 'Album Name':
+        if header_row[1] != 'Track Name' or header_row[3] != 'Artist Name(s)' or header_row[5] != 'Album Name' or header_row[16] != 'ISRC':
             print('\nThe CSV file is not in the correct format!\nPlease be sure to download the CSV file(s) only from https://watsonbox.github.io/exportify/.\n\n')
             return
         # Initializing variables for the stats
         n = 0
+        isrc = 0
+        text_based = 0
         converted = 0
         failed = 0
         # Looping through the CSV file
         for row in file:
             n += 1
             # Trying to get the iTunes ID of the song
-            title, artist, album = escape_apostrophes(
-                row[1]), escape_apostrophes(row[3]), escape_apostrophes(row[5])
-            track_id = get_itunes_id(title, artist, album)
+            title, artist, album, album_artist, isrc = escape_apostrophes(
+                row[1]), escape_apostrophes(row[3]), escape_apostrophes(row[5]), escape_apostrophes(row[7]), escape_apostrophes(row[16])
+            track_id = match_isrc_to_itunes_id(s, album, album_artist, isrc)
+            if track_id:
+                isrc += 1
+            else:
+                print(f'\nNo result found for {title} | {artist} | {album} with {isrc}. Trying text based search...')
+                track_id = get_itunes_id(title, artist, album)
+                if track_id:
+                    text_based += 1
             # If the song is found, add it to the playlist
             if track_id:
                 if str(track_id) in playlist_track_ids:
@@ -208,8 +250,8 @@ def create_playlist_and_add_song(file):
                     failed += 1
                     continue
                 print(f'\nN°{n} | {title} | {artist} | {album} => {track_id}')
-                sleep(0.5)
-                if add_song_to_playlist(s, track_id, playlist_identifier, playlist_name):
+                sleep(delay)
+                if add_song_to_playlist(s, track_id, playlist_identifier):
                     converted += 1
                 else:
                     failed += 1
@@ -220,10 +262,10 @@ def create_playlist_and_add_song(file):
                     f.write(f'{title} | {artist} | {album} => NOT FOUND')
                     f.write('\n')
                 failed += 1
-            sleep(1.5)
+            sleep(delay + 0.5)
     # Printing the stats report
     converted_percentage = round(converted / n * 100) if n > 0 else 100
-    print(f'\n - STAT REPORT -\nPlaylist Songs: {n}\nConverted Songs: {converted}\nFailed Songs: {failed}\nPlaylist converted at {converted_percentage}%')
+    print(f'\n - STAT REPORT -\nPlaylist Songs: {n}\nConverted Songs: {converted}\nFailed Songs: {failed}\nPlaylist converted at {converted_percentage}%\n\nConverted using ISRC: {isrc}\nConverted using text based search: {text_based}\n\n')
 
 
 if __name__ == "__main__":
@@ -240,4 +282,5 @@ if __name__ == "__main__":
 
 # Developped by @therealmarius on GitHub
 # Based on the work of @simonschellaert on GitHub
+# Based on the work of @nf1973 on GitHub
 # Github project page: https://github.com/therealmarius/Spotify-2-AppleMusic
