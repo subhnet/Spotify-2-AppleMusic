@@ -7,7 +7,7 @@ import requests
 import os
 
 # Delay (in seconds) to wait between tracks (to avoid getting rate limted) - reduce at own risk
-delay = 1
+delay = 2
 
 # Checking if the command is correct
 if len(argv) > 1 and argv[1]:
@@ -41,7 +41,7 @@ def create_apple_music_playlist(session, playlist_name):
                 return playlist['id']
     response = session.post(url, json=data)
     if response.status_code == 201:
-        sleep(1.5)
+        sleep(0.2)
         return response.json()['data'][0]['id']
     else:
         raise Exception(f"Error {response.status_code} while creating playlist {playlist_name}!")
@@ -133,7 +133,7 @@ def match_isrc_to_itunes_id(session, album, album_artist, isrc):
         if request.status_code == 200:
             data = json.loads(request.content.decode('utf-8'))
         else:
-            raise Exception(f"Error {request.status_code}\n{request.reason}")
+            raise Exception(f"Error {request.status_code}\n{request.reason}\n")
         if data["data"]:
             pass
         else:
@@ -159,14 +159,14 @@ def add_song_to_playlist(session, song_id, playlist_id):
         request = session.post(f"https://amp-api.music.apple.com/v1/me/library/playlists/{playlist_id}/tracks", json={"data":[{"id":f"{song_id}","type":"songs"}]})
         # Checking if the request is successful
         if requests.codes.ok:
-            print(f"Song {song_id} added successfully!")
+            print(f"Song {song_id} added successfully!\n\n")
             return True
         # If not, print the error code
         else: 
-            print(f"Error {request.status_code} while adding song {song_id}: {request.reason}")
+            print(f"Error {request.status_code} while adding song {song_id}: {request.reason}\n")
             return False
     except:
-        print(f"HOST ERROR: Apple Music might have blocked the connection during the add of {song_id}!\nPlease wait a few minutes and try again.\nIf the problem persists, please contact the developer.")
+        print(f"HOST ERROR: Apple Music might have blocked the connection during the add of {song_id}!\nPlease wait a few minutes and try again.\nIf the problem persists, please contact the developer.\n")
         return False
 
 def get_playlist_track_ids(session, playlist_id):
@@ -224,7 +224,7 @@ def create_playlist_and_add_song(file):
             return
         # Initializing variables for the stats
         n = 0
-        isrc = 0
+        isrc_based = 0
         text_based = 0
         converted = 0
         failed = 0
@@ -236,36 +236,39 @@ def create_playlist_and_add_song(file):
                 row[1]), escape_apostrophes(row[3]), escape_apostrophes(row[5]), escape_apostrophes(row[7]), escape_apostrophes(row[16])
             track_id = match_isrc_to_itunes_id(s, album, album_artist, isrc)
             if track_id:
-                isrc += 1
+                isrc_based += 1
             else:
-                print(f'\nNo result found for {title} | {artist} | {album} with {isrc}. Trying text based search...')
+                print(f'No result found for {title} | {artist} | {album} with {isrc}. Trying text based search...\n')
                 track_id = get_itunes_id(title, artist, album)
                 if track_id:
                     text_based += 1
             # If the song is found, add it to the playlist
             if track_id:
                 if str(track_id) in playlist_track_ids:
-                    print(f'\nN°{n} | {title} | {artist} | {album} => {track_id}')
-                    print(f"Song {track_id} already in playlist {playlist_name}!")
+                    print(f'N°{n} | {title} | {artist} | {album} => {track_id}\n')
+                    print(f"Song {track_id} already in playlist {playlist_name}!\n")
                     failed += 1
                     continue
-                print(f'\nN°{n} | {title} | {artist} | {album} => {track_id}')
-                sleep(delay)
+                print(f'N°{n} | {title} | {artist} | {album} => {track_id}\n')
+                try:
+                    sleep(delay - 0.5)
+                except:
+                    sleep(0.5)
                 if add_song_to_playlist(s, track_id, playlist_identifier):
                     converted += 1
                 else:
                     failed += 1
             # If not, write it in a file
             else:
-                print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND')
+                print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND\n')
                 with open(f'{playlist_name}_noresult.txt', 'a+', encoding='utf-8') as f:
-                    f.write(f'{title} | {artist} | {album} => NOT FOUND')
+                    f.write(f'{title} | {artist} | {album} => NOT FOUND\n')
                     f.write('\n')
                 failed += 1
-            sleep(delay + 0.5)
+            sleep(delay)
     # Printing the stats report
     converted_percentage = round(converted / n * 100) if n > 0 else 100
-    print(f'\n - STAT REPORT -\nPlaylist Songs: {n}\nConverted Songs: {converted}\nFailed Songs: {failed}\nPlaylist converted at {converted_percentage}%\n\nConverted using ISRC: {isrc}\nConverted using text based search: {text_based}\n\n')
+    print(f'\n - STAT REPORT -\nPlaylist Songs: {n}\nConverted Songs: {converted}\nFailed Songs: {failed}\nPlaylist converted at {converted_percentage}%\n\nConverted using ISRC: {isrc_based}\nConverted using text based search: {text_based}\n\n')
 
 
 if __name__ == "__main__":
