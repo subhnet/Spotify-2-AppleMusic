@@ -7,7 +7,7 @@ import requests
 import os
 
 # Delay (in seconds) to wait between tracks (to avoid getting rate limted) - reduce at own risk
-delay = 2
+delay = 1
 
 # Checking if the command is correct
 if len(argv) > 1 and argv[1]:
@@ -144,11 +144,17 @@ def match_isrc_to_itunes_id(session, album, album_artist, isrc):
     # Try to match the song with the results
     try:
         for each in data['data']:
-            if each['attributes']['albumName'].lower() == album.lower() and each['attributes']['artistName'].lower() == album_artist.lower():
+            isrc_album_name = escape_apostrophes(each['attributes']['albumName'].lower())
+            isrc_artist_name = escape_apostrophes(each['attributes']['artistName'].lower())
+            isrc_track_name = escape_apostrophes(each['attributes']['name'].lower())
+            
+            if isrc_album_name == album.lower() and isrc_artist_name == album_artist.lower():
                 return each['id']
-            elif each['attributes']['albumName'].lower() == album.lower() and (each['attributes']['artistName'].lower() in album_artist.lower() or album_artist.lower() in each['attributes']['artistName'].lower()):
+            elif isrc_album_name == album.lower() and (isrc_artist_name in album_artist.lower() or album_artist.lower() in isrc_artist_name):
                 return each['id']
-            elif each['attributes']['albumName'].lower() == album.lower():
+            elif isrc_album_name.startswith(album.lower()[:7]) and isrc_artist_name.startswith(album_artist.lower()[:7]):
+                return each['id']
+            elif isrc_album_name == album.lower():
                 return each['id']
     except:
         return None
@@ -250,9 +256,9 @@ def create_playlist_and_add_song(file):
                     failed += 1
                     continue
                 print(f'N°{n} | {title} | {artist} | {album} => {track_id}\n')
-                try:
-                    sleep(delay - 0.5)
-                except:
+                if delay >= 0.5:
+                    sleep(delay)
+                else:
                     sleep(0.5)
                 if add_song_to_playlist(s, track_id, playlist_identifier):
                     converted += 1
@@ -283,7 +289,7 @@ if __name__ == "__main__":
                 if ".csv" in file:
                     create_playlist_and_add_song(os.path.join(argv[1], file))
 
-# Developped by @therealmarius on GitHub
+# Developed by @therealmarius on GitHub
 # Based on the work of @simonschellaert on GitHub
 # Based on the work of @nf1973 on GitHub
 # Github project page: https://github.com/therealmarius/Spotify-2-AppleMusic
