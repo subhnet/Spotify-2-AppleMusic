@@ -164,7 +164,7 @@ def add_song_to_playlist(session, song_id, playlist_id):
     try:   
         request = session.post(f"https://amp-api.music.apple.com/v1/me/library/playlists/{playlist_id}/tracks", json={"data":[{"id":f"{song_id}","type":"songs"}]})
         # Checking if the request is successful
-        if requests.codes.ok:
+        if request.status_code == 200 or request.status_code == 201 or request.status_code== 204:
             print(f"Song {song_id} added successfully!\n\n")
             return True
         # If not, print the error code
@@ -263,6 +263,9 @@ def create_playlist_and_add_song(file):
                 if add_song_to_playlist(s, track_id, playlist_identifier):
                     converted += 1
                 else:
+                    with open(f'{playlist_name}_noresult.txt', 'a+', encoding='utf-8') as f:
+                        f.write(f'{title} | {artist} | {album} => UNABLE TO ADD TO PLAYLIST\n')
+                        f.write('\n')
                     failed += 1
             # If not, write it in a file
             else:
