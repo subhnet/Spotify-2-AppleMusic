@@ -76,7 +76,7 @@ def get_itunes_id(title, artist, album):
                 2. Double click the Install Certificates.command. It will open a terminal and install the certificate.
                 3. Rerun this script.
                 """)                
-                exit(1)
+            exit(1)
         data = json.loads(response.read().decode('utf-8'))
         # If no result, search for the title + artist
         if data['resultCount'] == 0:
