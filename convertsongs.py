@@ -51,7 +51,7 @@ def create_apple_music_playlist(session, playlist_name):
 token = get_connection_data("token.dat", "\nPlease enter your Apple Music Authorization (Bearer token):\n")
 media_user_token = get_connection_data("media_user_token.dat", "\nPlease enter your media user token:\n")
 cookies = get_connection_data("cookies.dat", "\nPlease enter your cookies:\n")
-country_code = input("Enter the country code (e.g., FR, UK, US etc.): ")
+country_code = get_connection_data("country_code.dat", "\nPlease enter the country code (e.g., FR, UK, US etc.): ")
 
 # function to escape apostrophes
 def escape_apostrophes(s):
@@ -159,21 +159,41 @@ def match_isrc_to_itunes_id(session, album, album_artist, isrc):
     except:
         return None
 
+def fetch_equivalent_song_id(session, song_id):
+    try:
+        request = session.get(f"https://amp-api.music.apple.com/v1/catalog/{country_code}/songs?filter[equivalents]={song_id}")
+        if request.status_code == 200:
+            data = json.loads(request.content.decode('utf-8'))
+            return data['data'][0]['id']
+        else:
+            return song_id
+    except:
+        return song_id
+
+
 # Function to add a song to a playlist
-def add_song_to_playlist(session, song_id, playlist_id):
+def add_song_to_playlist(session, song_id, playlist_id, playlist_track_ids, playlist_name):
+    song_id=str(song_id)
+    equivalent_song_id = fetch_equivalent_song_id(session, song_id)
+    if equivalent_song_id != song_id: 
+        print(f"{song_id} switched to equivalent -> {equivalent_song_id}")
+        if equivalent_song_id in playlist_track_ids:
+            print(f"Song {equivalent_song_id} already in playlist {playlist_name}!\n")
+            return "DUPLICATE"
+        song_id = equivalent_song_id
     try:   
         request = session.post(f"https://amp-api.music.apple.com/v1/me/library/playlists/{playlist_id}/tracks", json={"data":[{"id":f"{song_id}","type":"songs"}]})
         # Checking if the request is successful
         if request.status_code == 200 or request.status_code == 201 or request.status_code== 204:
             print(f"Song {song_id} added successfully!\n\n")
-            return True
+            return "OK"
         # If not, print the error code
         else: 
             print(f"Error {request.status_code} while adding song {song_id}: {request.reason}\n")
-            return False
+            return "ERROR"
     except:
         print(f"HOST ERROR: Apple Music might have blocked the connection during the add of {song_id}!\nPlease wait a few minutes and try again.\nIf the problem persists, please contact the developer.\n")
-        return False
+        return "ERROR"
 
 def get_playlist_track_ids(session, playlist_id):
     # test if song is already in playlist
@@ -244,29 +264,30 @@ def create_playlist_and_add_song(file):
             if track_id:
                 isrc_based += 1
             else:
-                print(f'No result found for {title} | {artist} | {album} with {isrc}. Trying text based search...\n')
+                print(f'No result found for {title} | {artist} | {album} with {isrc}. Trying text based search...')
                 track_id = get_itunes_id(title, artist, album)
                 if track_id:
                     text_based += 1
             # If the song is found, add it to the playlist
             if track_id:
                 if str(track_id) in playlist_track_ids:
-                    print(f'N°{n} | {title} | {artist} | {album} => {track_id}\n')
+                    print(f'N°{n} | {title} | {artist} | {album} => {track_id}')
                     print(f"Song {track_id} already in playlist {playlist_name}!\n")
                     failed += 1
                     continue
-                print(f'N°{n} | {title} | {artist} | {album} => {track_id}\n')
+                print(f'N°{n} | {title} | {artist} | {album} => {track_id}')
                 if delay >= 0.5:
                     sleep(delay)
                 else:
                     sleep(0.5)
-                if add_song_to_playlist(s, track_id, playlist_identifier):
-                    converted += 1
-                else:
+                result = add_song_to_playlist(s, track_id, playlist_identifier, playlist_track_ids, playlist_name)
+                if result == "OK": converted += 1
+                elif result == "ERROR":
                     with open(f'{playlist_name}_noresult.txt', 'a+', encoding='utf-8') as f:
                         f.write(f'{title} | {artist} | {album} => UNABLE TO ADD TO PLAYLIST\n')
                         f.write('\n')
                     failed += 1
+                elif result == "DUPLICATE": failed += 1
             # If not, write it in a file
             else:
                 print(f'N°{n} | {title} | {artist} | {album} => NOT FOUND\n')
