@@ -1,4 +1,5 @@
 from sys import argv
+import sys
 import csv
 import urllib.parse, urllib.request
 import json
@@ -43,9 +44,15 @@ def create_apple_music_playlist(session, playlist_name):
     if response.status_code == 201:
         sleep(0.2)
         return response.json()['data'][0]['id']
+    elif response.status_code == 401:
+        print("\nError 401: Unauthorized. Please refer to the README and check you have entered your Bearer Token, Media-User-Token and session cookies.\n")
+        sys.exit(1)
+    elif response.status_code == 403:
+        print("\nError 403: Forbidden. Please refer to the README and check you have entered your Bearer Token, Media-User-Token and session cookies.\n")
+        sys.exit(1)
     else:
         raise Exception(f"Error {response.status_code} while creating playlist {playlist_name}!")
-        return None
+        sys.exit(1)
     
 # Getting user's data for the connection
 token = get_connection_data("token.dat", "\nPlease enter your Apple Music Authorization (Bearer token):\n")
