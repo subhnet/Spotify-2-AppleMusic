@@ -26,23 +26,52 @@ def get_connection_data(f,prompt):
             return input(prompt)
 
 def create_apple_music_playlist(session, playlist_name):
-    url = "https://amp-api.music.apple.com/v1/me/library/playlists"
+    base_url = "https://amp-api.music.apple.com"
+    url = f"{base_url}/v1/me/library/playlists"
     data = {
         'attributes': {
             'name': playlist_name,
-            'description': 'A new playlist created via API using Spotify-2-AppleMusic',
+            'description': '',
         }
     }
+
+    # Helper function to get all playlists with pagination
+    def get_all_playlists(session):
+        playlists = []
+        next_page = url  # Start with the base URL
+        while next_page:
+            response = session.get(next_page)
+            if response.status_code == 200:
+                result = response.json()
+                playlists.extend(result['data'])
+
+                # Handle the relative URL issue for pagination
+                if 'next' in result and result['next']:
+                    next_page = result['next']
+                    if next_page.startswith('/'):
+                        next_page = base_url + next_page  # Prepend base URL if next_page is relative
+                else:
+                    next_page = None
+            else:
+                raise Exception(f"Error {response.status_code} while retrieving playlists!")
+                return []
+        return playlists
+
     # Test if playlist exists and create it if not
-    response = session.get(url)
-    if response.status_code == 200:
-        for playlist in response.json()['data']:
+    try:
+        playlists = get_all_playlists(session)
+        for playlist in playlists:
+            print(playlist['attributes']['name'])
             if playlist['attributes']['name'] == playlist_name:
                 print(f"Playlist {playlist_name} already exists!")
                 return playlist['id']
+    except Exception as e:
+        print(f"An error occurred while fetching playlists: {e}")
+        sys.exit(1)
+
+    # If playlist does not exist, create a new one
     response = session.post(url, json=data)
     if response.status_code == 201:
-        sleep(0.2)
         return response.json()['data'][0]['id']
     elif response.status_code == 401:
         print("\nError 401: Unauthorized. Please refer to the README and check you have entered your Bearer Token, Media-User-Token and session cookies.\n")
@@ -53,96 +82,100 @@ def create_apple_music_playlist(session, playlist_name):
     else:
         raise Exception(f"Error {response.status_code} while creating playlist {playlist_name}!")
         sys.exit(1)
+
+
     
 # Getting user's data for the connection
-token = get_connection_data("token.dat", "\nPlease enter your Apple Music Authorization (Bearer token):\n")
-media_user_token = get_connection_data("media_user_token.dat", "\nPlease enter your media user token:\n")
-cookies = get_connection_data("cookies.dat", "\nPlease enter your cookies:\n")
-country_code = get_connection_data("country_code.dat", "\nPlease enter the country code (e.g., FR, UK, US etc.): ")
+token = 'Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNzI2NTk4NTc0LCJleHAiOjE3MzM4NTYxNzQsInJvb3RfaHR0cHNfb3JpZ2luIjpbImFwcGxlLmNvbSJdfQ.UpoA1QmDWEjHiXqfaDXJj6TMROl-yLRRj8-fgC1XNzbpujZ2601nqyGGhZmxm7s8E1lB6BB7zVk-lZaXpTN5cQ'
+media_user_token = 'AgiNx2EIu4I1J0UnK1FON8za7/8KvDrfMLxGxMkQQWbemijTb0D2P9PcQegZAdFGT84hi1RzK5PH2Xjk88gQla+JAhE2jfud8WgEldQZ5CrLnYzDh80aoMCAV2IiH6W2eks4+AGcjmjk1NvxuwyDA6Fm7RiSsJWPsxvKZB9vsHbH3muvebqJud1p4y+rVqM9prgFdv+JhGoLUdKV0gbMA7w25vKmp6rVitsNlsffQpM3YOc0SA=='
+cookies = 'geo=IN; s_ppvl=%5B%5BB%5D%5D; s_cc=true; s_ppv=acs%253A%253Aadf%253A%253Aiphone%253A%253Ana%253A%253Athread-254931020%2520%2528en-us%2529%2C100%2C32%2C3329%2C1554%2C1075%2C1792%2C1120%2C2%2CP; itre=0; dslang=US-EN; site=USA; wosid-replay=0tlMvAatOXuPybzneJxOag; myacinfo=DAWTKNV323952cf8084a204fb20ab2508441a07d02d341be27948bbc36e4bba94441c18c2de245573295312281883350271d1fe7c9876ceb2ff186371fa0adc702e228114415d425c325827210c739df6ab36fd01db056dd2adf2edf21852c9c3e0bbf4a72d38a1baac490e3e0696bea2c669c906475a9da31f887fe3ae8f0a91a0b8ec646295bed20e390163cf6b20f1695b63e2aeeb68cab438e0f3d31fc0183732515eb7b093286d7fabb033aa4cac912d245811d09c07bc7136dce1662b64e38849c037ad3a1bb6ef81bf3e7ba7a5bb23e87bb0640854cb647800a374b7f52bd917d37de965bbfac1898c9e8e8f5b2d42345c8c923a6b2fc900ed09e36a8ffd873023e3b46993224b5f72bfc86c3132a23c6a99ed59a11384d0055b4326bee93c0e4d68c73dc02def61e6c1c9a8d6e43ce20e36393762fbf680b7856f6ade4145a5e8024d92e509b4574d6f6393a7f2101e579d75dcf0b12c382df4c8475518e0cce092e586eca99cb5e6a9d4826b9cd6941c1973735855beeb5ff716a7a695c36b7e01c9368597a5df453249648ce1a0114164be63e913526332c55e20c6bbfd2291591dde74e19e45c334ad0de5545ec94e1e9ba7fccb60318d6d8e4415ac93985786858865111a23a0161b6fa71ca1c8fddef1c9cf01887912ba8896969e941f2b618f9ac112bca7e68a6764bd568dee8c18e70c321280eff2825e8ebc5192683d44f7a2a51dd2192224df41abbfd1a54cb95585a47V3; commerce-authorization-token=AAAAAAAAAAL+fh1L1VE02MjDSE897SABaY15swS3H7vVQag5mgmPvL4MQo395YmB7GmrFspg9+prccX8M3lEKbed9tLyVXmzTqcYYcS40Dx4pd6c3JFQL9dbnImwXTFVhGO2nHsmLYd3/HJzzbWwvEsaF5ue4ZjvvcNsPaQDNMS0BNhj/TJSIXMOBmDZSf17Q9L78VuGvj51/NYNAseNpFOoHEXqyMqkYrdtaTCnp+20oKIy8NjP+6TQc1Zw6655VXi2SbW1o+W9ECJH5DJnJVB1btjF+f2akLbjBlPY8mF5afI8cyT7eg==; itspod=22; media-user-token=AgiNx2EIu4I1J0UnK1FON8za7/8KvDrfMLxGxMkQQWbemijTb0D2P9PcQegZAdFGT84hi1RzK5PH2Xjk88gQla+JAhE2jfud8WgEldQZ5CrLnYzDh80aoMCAV2IiH6W2eks4+AGcjmjk1NvxuwyDA6Fm7RiSsJWPsxvKZB9vsHbH3muvebqJud1p4y+rVqM9prgFdv+JhGoLUdKV0gbMA7w25vKmp6rVitsNlsffQpM3YOc0SA==; itua=IN; pldfltcid=8619d25510034709ad2446cacae44f6e022; pltvcid=dc755f083bce4d119919ee7d00d0ea34022'
+
+country_code = 'IN'
 
 # function to escape apostrophes
 def escape_apostrophes(s):
     return s.replace("'", "\\'")
 
-# Function to get the iTunes ID of a song (text based search)
-def get_itunes_id(title, artist, album):
+def get_itunes_id(title, artist, album, retries=5, backoff_factor=2):
     BASE_URL = f"https://itunes.apple.com/search?country={country_code}&media=music&entity=song&limit=5&term="
-    # Search the iTunes catalog for a song
+    
+    def make_request(url):
+        for i in range(retries):
+            try:
+                request = urllib.request.Request(url)
+                response = urllib.request.urlopen(request)
+                return json.loads(response.read().decode('utf-8'))
+            except Exception as e1:
+                print(f"Attempt {i+1} failed: {e1}")
+                if "SSL: CERTIFICATE_VERIFY_FAILED" in str(e1):
+                    print("""
+                    This issue is likely because of missing certification for macOS.
+                    Here are the steps to solution:
+                    1. Open the folder /Applications/Python 3.x (x is the version you are running).
+                    2. Double click the Install Certificates.command. It will open a terminal and install the certificate.
+                    3. Rerun this script.
+                    """)
+                    exit(1)
+                if i < retries - 1:
+                    sleep_time = backoff_factor ** i  # Exponential backoff
+                    print(f"Retrying in {sleep_time} seconds...")
+                    sleep(sleep_time)
+                else:
+                    print("Max retries exceeded")
+                    return None
+
     try:
         # Search for the title + artist + album
         url = BASE_URL + urllib.parse.quote(title + " " + artist + " " + album)
-        request = urllib.request.Request(url)
-        try:
-            response = urllib.request.urlopen(request)
-        except Exception as e1:
-            print(e1)
-            if ("SSL: CERTIFICATE_VERIFY_FAILED" in e1):
-                print("""
-                This issue is likey because of missing certification for macOS.
-                Here are the steps to solution:
-                1. Open the folder /Applications/Python 3.x (x is the version you are running).
-                2. Double click the Install Certificates.command. It will open a terminal and install the certificate.
-                3. Rerun this script.
-                """)                
-            exit(1)
-        data = json.loads(response.read().decode('utf-8'))
-        # If no result, search for the title + artist
-        if data['resultCount'] == 0:
+        data = make_request(url)
+        
+        if data and data['resultCount'] == 0:
+            # If no result, search for the title + artist
             url = BASE_URL + urllib.parse.quote(title + " " + artist)
-            request = urllib.request.Request(url)
-            response = urllib.request.urlopen(request)
-            data = json.loads(response.read().decode('utf-8'))
-            # If no result, search for the title + album
-            if data['resultCount'] == 0:
+            data = make_request(url)
+            
+            if data and data['resultCount'] == 0:
+                # If no result, search for the title + album
                 url = BASE_URL + urllib.parse.quote(title + " " + album)
-                request = urllib.request.Request(url)
-                response = urllib.request.urlopen(request)
-                data = json.loads(response.read().decode('utf-8'))
-                # If no result, search for the title
-                if data['resultCount'] == 0:
+                data = make_request(url)
+                
+                if data and data['resultCount'] == 0:
+                    # If no result, search for the title
                     url = BASE_URL + urllib.parse.quote(title)
-                    request = urllib.request.Request(url)
-                    response = urllib.request.urlopen(request)
-                    data = json.loads(response.read().decode('utf-8'))
+                    data = make_request(url)
+    
     except Exception as e:
-        return print(f"An error occured with the text based search request: {e}")
+        print(f"An error occurred with the search request: {e}")
+        return None
     
     # Try to match the song with the results
-    try:
-        response = urllib.request.urlopen(request)
-        data = json.loads(response.read().decode('utf-8'))
-        
-        for each in data['results']:
-            #Trying to match with the exact track name, the artist name and the album name
-            if each['trackName'].lower() == title.lower() and each['artistName'].lower() == artist.lower() and each['collectionName'].lower() == album.lower():
-                return each['trackId']           
-            #Trying to match with the exact track name and the artist name
-            elif each['trackName'].lower() == title.lower() and each['artistName'].lower() == artist.lower():
-                return each['trackId']
-            #Trying to match with the exact track name and the album name
-            elif each['trackName'].lower() == title.lower() and each['collectionName'].lower() == album.lower():
-                return each['trackId']
-            #Trying to match with the exact track name and the artist name, in the case artist name are different between Spotify and Apple Music
-            elif each['trackName'].lower() == title.lower() and (each["artistName"].lower() in artist.lower() or artist.lower() in each["artistName"].lower()):
-                return each['trackId']
-            #Trying to match with the exact track name and the album name, in the case album name are different between Spotify and Apple Music
-            elif each['trackName'].lower() == title.lower() and (each["collectionName"].lower() in album.lower() or album.lower() in each["collectionName"].lower()):
-                return each['trackId']  
-            #Trying to match with the exact track name
-            elif each['trackName'].lower() == title.lower():
-                return each['trackId']        
-            #Trying to match with the track name, in the case track name are different between Spotify and Apple Music
-            elif title.lower() in each['trackName'] or each['trackName'].lower() in title.lower():
-                return each['trackId']
+    if data:
         try:
-            #If no result, return the first result
-            return data['results'][0]['trackId']
-        except:
-            #If no result, return None
+            for each in data['results']:
+                # Match logic remains the same
+                if each['trackName'].lower() == title.lower() and each['artistName'].lower() == artist.lower() and each['collectionName'].lower() == album.lower():
+                    return each['trackId']
+                elif each['trackName'].lower() == title.lower() and each['artistName'].lower() == artist.lower():
+                    return each['trackId']
+                elif each['trackName'].lower() == title.lower() and each['collectionName'].lower() == album.lower():
+                    return each['trackId']
+                elif each['trackName'].lower() == title.lower() and (each["artistName"].lower() in artist.lower() or artist.lower() in each["artistName"].lower()):
+                    return each['trackId']
+                elif each['trackName'].lower() == title.lower() and (each["collectionName"].lower() in album.lower() or album.lower() in each["collectionName"].lower()):
+                    return each['trackId']
+                elif each['trackName'].lower() == title.lower():
+                    return each['trackId']
+                elif title.lower() in each['trackName'] or each['trackName'].lower() in title.lower():
+                    return each['trackId']
+            
+            # If no exact match, return the first result
+            return data['results'][0]['trackId'] if data['results'] else None
+
+        except Exception as e:
+            print(f"Error matching results: {e}")
             return None
-    except:
-        #The error is handled later in the code
-        return None
+
+    return None
 
 def match_isrc_to_itunes_id(session, album, album_artist, isrc):
     # Search the Apple Music caralog for a song using the ISRC
@@ -231,6 +264,7 @@ def get_playlist_track_ids(session, playlist_id):
         return None
 # Opening session
 def create_playlist_and_add_song(file):
+    print(f"Creating playlist for file: {file}")
     with requests.Session() as s:
         s.headers.update({
                     "Authorization": f"{token}",
@@ -256,9 +290,9 @@ def create_playlist_and_add_song(file):
     playlist_name = playlist_name.capitalize()
 
     playlist_identifier = create_apple_music_playlist(s, playlist_name)
-
+    print(playlist_identifier)
     playlist_track_ids = get_playlist_track_ids(s, playlist_identifier)
-    #print(playlist_track_ids)
+    print(playlist_track_ids)
     
     # Opening the inputed CSV file
     with open(str(file), encoding='utf-8') as file:
@@ -331,8 +365,3 @@ if __name__ == "__main__":
             for file in files:
                 if ".csv" in file:
                     create_playlist_and_add_song(os.path.join(argv[1], file))
-
-# Developed by @therealmarius on GitHub
-# Based on the work of @simonschellaert on GitHub
-# Based on the work of @nf1973 on GitHub
-# Github project page: https://github.com/therealmarius/Spotify-2-AppleMusic
